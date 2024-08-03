@@ -108,7 +108,7 @@ This project is licensed under the GNUv3.0 License. See the [LICENSE](LICENSE) f
 
 ## Contact
 
-If you have any questions or need further assistance, please open an issue in this repository or contact [your email].
+If you have any questions or need further assistance, please open an issue in this repository.
 
 ---
 
