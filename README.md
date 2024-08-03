@@ -27,18 +27,31 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
     ```sh
     pip install requests Pillow
     ```
+    OR
+   ```sh
+    pip install -r Requirements.txt
+    ```
 
-3. **Place your JSON file**:
+4. **Place your JSON file**:
     Ensure that your `Waven_DB_Spells.json` file is in the same directory as the script.
 
 ## Usage
+1. **Get the json file**
+    - Go at `https://wavendb.com/`
+    - Open Browser Developer console (`ctrl+maj+j` on windows chrome browser)
+    - Go to Network tab
+    - Check Preserve Log and Disable cache
+    - Click on "Fetch/XHR" to filter requests
+    - With Developer console open go to `https://wavendb.com/spells`
+    - Open spells requests and click on response tab
+    - Copy all content and past it into a file nammed `Waven_DB_Spells.json` on the main directory of the script
 
-1. **Run the script**:
+2. **Run the script**:
     ```sh
     python waven_db_spell_extractor.py
     ```
 
-2. **Logs**:
+3. **Logs**:
     - The script logs its progress and any errors to both the console and a log file named `Waven_DB_Spell_Extractor.log`.
     - The log file is created in the same directory as the script and is deleted at the start of each run to ensure clean logging.
 
@@ -91,7 +104,7 @@ If you would like to contribute to this project, please fork the repository and 
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNUv3.0 License. See the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
