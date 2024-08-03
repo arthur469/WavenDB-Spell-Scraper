@@ -110,6 +110,11 @@ This project is licensed under the GNUv3.0 License. See the [LICENSE](LICENSE) f
 
 If you have any questions or need further assistance, please open an issue in this repository.
 
+## Disclaimer
+This project is intended solely for educational purposes and to provide a practical example of data extraction, processing, and organization techniques. There is no intention to harm, infringe on copyrights, or misuse the information and resources provided. Users are encouraged to use this script responsibly and ensure that they have the proper permissions when handling data and resources from external sources.
+
+Please note that I cannot be held responsible for any misuse, damage, or legal issues that may arise from the use of this script. Users are fully responsible for their actions and must ensure compliance with all applicable laws and regulations.
+
 ---
 
 Thank you for using the Waven DB Spell Extractor!
