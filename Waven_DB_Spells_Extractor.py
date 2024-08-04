@@ -1,29 +1,14 @@
 import json
-import configparser
 import os
 import requests
 from PIL import Image
 import logging
 from requests.exceptions import RequestException
 from PIL import UnidentifiedImageError
+from bs4 import BeautifulSoup
 
 
-THIS_FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
-json_filename = "Waven_DB_Spells.json"
-
-if os.path.exists(os.path.join(THIS_FOLDER_PATH, 'Waven_DB_Spell_Extractor.log')):
-    os.remove(os.path.join(THIS_FOLDER_PATH, 'Waven_DB_Spell_Extractor.log'))
-
-# Configure logging to log to both file and console
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s',
-                    filename=os.path.join(THIS_FOLDER_PATH, 'Waven_DB_Spell_Extractor.log'),
-                    filemode='a')
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-logging.getLogger().addHandler(console_handler)
-
-def process_spells_data():
+def process_spells_data(json_filename):
     """
     Process spell data from a JSON file, create configuration files, and download spell images.
 
@@ -37,7 +22,7 @@ def process_spells_data():
     """
     try:
         # Load the content from the JSON file
-        with open(os.path.join(THIS_FOLDER_PATH, json_filename)) as file:
+        with open(os.path.join(THIS_FOLDER_PATH, json_filename), encoding="utf8") as file:
             data = json.load(file)
         
         # Process each spell in the data
@@ -99,19 +84,26 @@ def create_spell_config(name_fr, name_en, cost, element, gauge_element, gauge_nb
     Returns:
         dict: Configuration object for the spell in .json format.
     """
-    config = {
-        'name_fr': name_fr,
-        'name_en': name_en,
-        'cost': cost,
-        'element': element,
-        'gauge_element': gauge_element,
-        'gauge_nb': gauge_nb,
-        'gauge2_element': gauge2_element,
-        'gauge2_nb': gauge2_nb,
-        'weapon': weapon,
-        'familie': familie
-    }
-    return config
+    try:
+        config = {
+            'name_fr': name_fr,
+            'name_en': name_en,
+            'cost': cost,
+            'element': element,
+            'gauge_element': gauge_element,
+            'gauge_nb': gauge_nb,
+            'gauge2_element': gauge2_element,
+            'gauge2_nb': gauge2_nb,
+            'weapon': weapon,
+            'familie': familie
+        }
+        return config
+    except TypeError as e:
+        logging.error(f"Invalid type for one or more arguments: {e}")
+        return {}
+    except Exception as e:
+        logging.error(f"Unexpected error creating spell configuration: {e}")
+        return {}
 
 def create_directory_structure(familie, weapon):
     """
@@ -125,7 +117,7 @@ def create_directory_structure(familie, weapon):
         str: Path to the directory where the spell data will be stored.
     """
     try:
-        cwd = os.path.join(THIS_FOLDER_PATH, str(familie))  # Convert to str
+        cwd = os.path.join(RESULT_FOLDER_PATH, str(familie))  # Convert to str
         if not os.path.exists(cwd):
             os.makedirs(cwd)
         
@@ -151,7 +143,7 @@ def save_spell_config(config, cwd, name_fr):
     """
     try:
         with open(os.path.join(cwd, f"{name_fr}.json"), 'w') as configfile:
-            json.dump(config, configfile)
+            json.dump(config, configfile, indent=4)
         logging.info(f"Saved configuration for spell: {name_fr}")
     except IOError as e:
         logging.error(f"Error saving configuration for spell {name_fr}: {e}")
@@ -196,6 +188,69 @@ def download_and_process_image(img_id, cwd, name_fr):
     except Exception as e:
         logging.error(f"Unexpected error processing image for spell {name_fr}: {e}")
 
+def fetch_data_page(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException as e:
+        logging.error(f"Error fetching URL: {e}")
+        return None
+
+def extract_data_page(html_content):
+    try:
+        soup = BeautifulSoup(html_content, 'html.parser')
+        data_page_div = soup.find('div', id='app')
+        if data_page_div and 'data-page' in data_page_div.attrs:
+            data_page_json = data_page_div['data-page']
+            return json.loads(data_page_json)
+        else:
+            logging.error("data-page attribute not found in the div")
+            return None
+    except Exception as e:
+        logging.error(f"Error extracting data-page: {e}")
+        return None
+
+def main(url='https://wavendb.com/spells', file_name="Waven_DB_Spells.json"):
+    html_content = fetch_data_page(url)
+    if html_content:
+        data_page = extract_data_page(html_content)
+        if data_page:
+            output_file = os.path.join(THIS_FOLDER_PATH, file_name)
+            
+            # Write the result to the file
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(data_page, f, indent=4, ensure_ascii=False)
+            
+            logging.info(f"Data written to {output_file}")
+            
+            process_spells_data(file_name)
+        else:
+            logging.error("No data found to process.")
+    else:
+        logging.error("No HTML content fetched from the URL.")
+            
 # Execute the main function
 if __name__ == "__main__":
-    process_spells_data()
+    THIS_FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
+    RESULT_FOLDER_PATH = os.path.join(THIS_FOLDER_PATH, "Spells")
+    
+    if not os.path.exists(RESULT_FOLDER_PATH):
+        os.makedirs(RESULT_FOLDER_PATH)
+    
+    # Supprime les logs précédent
+    if os.path.exists(os.path.join(THIS_FOLDER_PATH, 'Waven_DB_Spell_Extractor.log')):
+        os.remove(os.path.join(THIS_FOLDER_PATH, 'Waven_DB_Spell_Extractor.log'))
+        
+    # Configure logging to log to both file and console
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s',
+                        filename=os.path.join(THIS_FOLDER_PATH, 'Waven_DB_Spell_Extractor.log'),
+                        filemode='a')
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logging.getLogger().addHandler(console_handler)
+
+
+
+    main()
