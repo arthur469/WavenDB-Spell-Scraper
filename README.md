@@ -39,10 +39,8 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
     ```sh
     python waven_db_spell_extractor.py
     ```
-
-2. **Logs**:
-    - The script logs its progress and any errors to both the console and a log file named `Waven_DB_Spell_Extractor.log`.
-    - The log file is created in the same directory as the script and is deleted at the start of each run to ensure clean logging.
+## Arguments
+`-mv` Rename folders into gods and weapons names (exemple : Folder `1` will be rename as `Iop`).
 
 ## Script Details
 
@@ -55,6 +53,7 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
 - **`download_and_process_image`**: Downloads the spell image, converts it from WebP to PNG, and saves it in the appropriate directory.
 - - **`fetch_data_page`**: Fetches the HTML content from the given URL.
 - **`extract_data_page`**: Extracts the `data-page` attribute from the HTML content and parses it into a dictionary.
+- **`rename_folder`**: Rename folders into gods and weapons names.
 
 ### Error Handling
 

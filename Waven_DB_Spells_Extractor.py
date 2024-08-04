@@ -6,6 +6,11 @@ import logging
 from requests.exceptions import RequestException
 from PIL import UnidentifiedImageError
 from bs4 import BeautifulSoup
+import argparse
+
+# ArgParse
+parser = argparse.ArgumentParser(description='WavenDB-Spell-Scraper')
+parser.add_argument('--rename_folder','-mv', dest='rename_folder', action='store_true', help='Rename folders by god and weapon name', required=False)
 
 
 def process_spells_data(json_filename):
@@ -211,6 +216,45 @@ def extract_data_page(html_content):
         logging.error(f"Error extracting data-page: {e}")
         return None
 
+def rename_folder(json_file):
+    """
+    Renames folders and subfolders based on the data from a JSON file.
+
+    This function reads the content of a JSON file, iterates through the folders in a specified directory, and renames them based on the 'id' and 'name_fr' attributes of the 'gods' and 'weapons' in the JSON data. The function logs each step of the process for debugging purposes.
+
+    Parameters:
+    - json_file (str): The path to the JSON file containing the data for renaming folders.
+
+    Returns:
+    - None
+    """
+    # Load the content from the JSON file
+    with open(os.path.join(json_file), encoding="utf8") as file:
+        data = json.load(file)
+            
+    logging.debug(f"Loaded JSON data from {json_file}")
+            
+    for folder in os.listdir(RESULT_FOLDER_PATH):
+        logging.debug(f"Checking folder: {folder}")
+        for god in data['props']['gods']:
+            logging.debug(f"Checking god: {god['id']}")
+            if folder == str(god['id']):
+                new_folder_name = str(god['name_fr'])
+                logging.info(f"Renaming folder {folder} to {new_folder_name}")
+                os.rename(os.path.join(RESULT_FOLDER_PATH, folder), os.path.join(RESULT_FOLDER_PATH, new_folder_name))
+                logging.info(f"Renamed folder {folder} to {new_folder_name}")
+                
+                for sub_folder in [f for f in os.listdir(os.path.join(RESULT_FOLDER_PATH, new_folder_name)) if os.path.isdir(os.path.join(RESULT_FOLDER_PATH, new_folder_name, f))]:
+                    
+                    logging.debug(f"Checking sub folder: {sub_folder}")
+                    for weapon in god['weapons']:
+                        logging.debug(f"Checking weapon: {weapon['id']}")
+                        if sub_folder == str(weapon['id']):
+                            new_sub_folder_name = weapon['name_fr']
+                            logging.info(f"Renaming sub folder {sub_folder} to {new_sub_folder_name}")
+                            os.rename(os.path.join(RESULT_FOLDER_PATH, new_folder_name, sub_folder), os.path.join(RESULT_FOLDER_PATH, new_folder_name, new_sub_folder_name))
+                            logging.info(f"Renamed sub folder {sub_folder} to {new_sub_folder_name}")
+                        
 def main(url='https://wavendb.com/spells', file_name="Waven_DB_Spells.json"):
     html_content = fetch_data_page(url)
     if html_content:
@@ -227,11 +271,17 @@ def main(url='https://wavendb.com/spells', file_name="Waven_DB_Spells.json"):
             process_spells_data(file_name)
         else:
             logging.error("No data found to process.")
+            
+        if args.rename_folder:
+            rename_folder(output_file)
     else:
         logging.error("No HTML content fetched from the URL.")
+        
             
 # Execute the main function
 if __name__ == "__main__":
+    args = parser.parse_args()
+    
     THIS_FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
     RESULT_FOLDER_PATH = os.path.join(THIS_FOLDER_PATH, "Spells")
     
@@ -250,7 +300,5 @@ if __name__ == "__main__":
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     logging.getLogger().addHandler(console_handler)
-
-
 
     main()
