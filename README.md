@@ -41,6 +41,13 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
     ```
 ## Arguments
 `-mv` Rename folders into gods and weapons names (exemple : Folder `1` will be rename as `Iop`).
+`-l` Set the language preference, default is `en`. Available language : en, fr, es, de, pt.
+
+##Exemple
+1. **Download data in spanish and rename folder"
+    ```sh
+    python waven_db_spell_extractor.py -mv -l es
+    ```
 
 ## Script Details
 
