@@ -4,10 +4,11 @@
 
 The Waven DB Spell Extractor is a Python script designed to automate the extraction, organization, and processing of spell data from a JSON file. This script performs the following tasks:
 
-1. **Loads spell data** from a JSON file.
-2. **Creates configuration files** for each spell in `.json` format.
-3. **Organizes spells** into folders based on their family and weapon.
-4. **Downloads and converts spell images** from WebP to PNG format.
+1. **Download Json Data** from https://wavendb.com/spells
+2. **Loads spell data** from a JSON file.
+3. **Creates configuration files** for each spell in `.json` format.
+4. **Organizes spells** into folders based on their family and weapon.
+5. **Downloads and converts spell images** from WebP to PNG format.
 
 ## Requirements
 
@@ -52,6 +53,8 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
 - **`create_directory_structure`**: Creates a nested directory structure for storing spell data based on family and weapon.
 - **`save_spell_config`**: Saves the spell configuration to a `.json` file.
 - **`download_and_process_image`**: Downloads the spell image, converts it from WebP to PNG, and saves it in the appropriate directory.
+- - **`fetch_data_page`**: Fetches the HTML content from the given URL.
+- **`extract_data_page`**: Extracts the `data-page` attribute from the HTML content and parses it into a dictionary.
 
 ### Error Handling
 
@@ -69,18 +72,19 @@ Here is an example of how the directory structure and configuration files will b
 
 ```
 Waven_DB_Spells/
-├── 11/
-│   ├── weapon1/
-│   │   ├── spell1.json
-│   │   ├── spell1.png
-│   │   ├── spell2.json
-│   │   ├── spell2.png
-│   ├── weapon2/
-│   │   ├── spell3.json
-│   │   ├── spell3.png
-│   └── weapon3/
-│       ├── spell4.json
-│       ├── spell4.png
+├── Spells/
+│  ├── 11/
+│     ├── weapon1/
+│     │   ├── spell1.json
+│     │   ├── spell1.png
+│     │   ├── spell2.json
+│     │   ├── spell2.png
+│     ├── weapon2/
+│     │   ├── spell3.json
+│     │   ├── spell3.png
+│     └── weapon3/
+│         ├── spell4.json
+│         ├── spell4.png
 ...
 ```
 
