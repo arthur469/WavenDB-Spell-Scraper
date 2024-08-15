@@ -38,25 +38,15 @@ def process_spells_data(json_filename):
             try:
                 # Extract spell information
                 name = spell[f'name_{language}']
-                cost = spell['cost']
-                element = spell['element']
-                gauge_element = spell['gauge1Element']
-                gauge_nb = spell['gauge1Value']
-                gauge2_element = spell['gauge2Element']
-                gauge2_nb = spell['gauge2Value']
                 weapon = spell['specific_to_weapon']
                 familie = spell['families']
                 img_id = spell['img']
 
                 logging.info(f"Processing spell: {name}")
 
-                # Create configuration for the spell
-                config = create_spell_config(name, cost, element, gauge_element, gauge_nb,
-                                             gauge2_element, gauge2_nb, weapon, familie)
-
                 # Create directory structure and save configuration
                 cwd = create_directory_structure(familie, weapon)
-                save_spell_config(config, cwd, name)
+                save_spell_config(spell, cwd, name)
 
                 # Download and process spell image
                 download_and_process_image(img_id, cwd, name)
@@ -70,45 +60,6 @@ def process_spells_data(json_filename):
         logging.error(f"Invalid JSON in file: {json_filename}")
     except Exception as e:
         logging.error(f"Unexpected error in process_spells_data: {e}")
-
-def create_spell_config(name, cost, element, gauge_element, gauge_nb,
-                        gauge2_element, gauge2_nb, weapon, familie):
-    """
-    Create a configuration object for a spell.
-
-    Args:
-        name : Name of the spell.
-        cost : Cost of the spell.
-        element : Element of the spell.
-        gauge_element : First gauge element.
-        gauge_nb : First gauge value.
-        gauge2_element : Second gauge element.
-        gauge2_nb : Second gauge value.
-        weapon : Weapon associated with the spell.
-        familie : Family of the spell.
-
-    Returns:
-        dict: Configuration object for the spell in .json format.
-    """
-    try:
-        config = {
-            'name': name,
-            'cost': cost,
-            'element': element,
-            'gauge_element': gauge_element,
-            'gauge_nb': gauge_nb,
-            'gauge2_element': gauge2_element,
-            'gauge2_nb': gauge2_nb,
-            'weapon': weapon,
-            'familie': familie
-        }
-        return config
-    except TypeError as e:
-        logging.error(f"Invalid type for one or more arguments: {e}")
-        return {}
-    except Exception as e:
-        logging.error(f"Unexpected error creating spell configuration: {e}")
-        return {}
 
 def create_directory_structure(familie, weapon):
     """
@@ -137,7 +88,7 @@ def create_directory_structure(familie, weapon):
         logging.error(f"Error creating directory structure: {e}")
         raise
 
-def save_spell_config(config, cwd, name):
+def save_spell_config(spell, cwd, name):
     """
     Save the spell configuration to a .json file.
 
@@ -148,7 +99,7 @@ def save_spell_config(config, cwd, name):
     """
     try:
         with open(os.path.join(cwd, f"{name}.json"), 'w') as configfile:
-            json.dump(config, configfile, indent=4)
+            json.dump(spell, configfile, indent=4)
         logging.info(f"Saved configuration for spell: {name}")
     except IOError as e:
         logging.error(f"Error saving configuration for spell {name}: {e}")
