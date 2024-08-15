@@ -58,7 +58,7 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
 - **`create_directory_structure`**: Creates a nested directory structure for storing spell data based on family and weapon.
 - **`save_spell_config`**: Saves the spell configuration to a `.json` file.
 - **`download_and_process_image`**: Downloads the spell image, converts it from WebP to PNG, and saves it in the appropriate directory.
-- - **`fetch_data_page`**: Fetches the HTML content from the given URL.
+- **`fetch_data_page`**: Fetches the HTML content from the given URL.
 - **`extract_data_page`**: Extracts the `data-page` attribute from the HTML content and parses it into a dictionary.
 - **`rename_folder`**: Rename folders into gods and weapons names.
 
