@@ -8,10 +8,12 @@ from PIL import UnidentifiedImageError
 from bs4 import BeautifulSoup
 import argparse
 import sys
+import re
 
 # ArgParse
 parser = argparse.ArgumentParser(description='WavenDB-Spell-Scraper')
 parser.add_argument('--rename_folder','-mv', dest='rename_folder', action='store_true', help='Rename folders by god and weapon name', required=False)
+parser.add_argument('--rename_spells','-mvs', dest='rename_spells', action='store_true', help='Rename spells by their name', required=False)
 parser.add_argument('--language','-l', dest='language', action='store', default="en", help='set the language preference.\nAvailable language : en, fr, es, de, pt', required=False)
 
 
@@ -32,28 +34,26 @@ def process_spells_data(json_filename):
         with open(os.path.join(THIS_FOLDER_PATH, json_filename), encoding="utf8") as file:
             data = json.load(file)
         
-        language = args.language
         # Process each spell in the data
         for spell in data['props']['spells']:
             try:
                 # Extract spell information
-                name = spell[f'name_{language}']
                 weapon = spell['specific_to_weapon']
                 familie = spell['families']
                 img_id = spell['img']
 
-                logging.info(f"Processing spell: {name}")
+                logging.info(f"Processing spell: {img_id}")
 
                 # Create directory structure and save configuration
                 cwd = create_directory_structure(familie, weapon)
-                save_spell_config(spell, cwd, name)
+                save_spell_config(spell, cwd, img_id)
 
                 # Download and process spell image
-                download_and_process_image(img_id, cwd, name)
+                download_and_process_image(img_id, cwd)
             except KeyError as e:
                 logging.error(f"Missing key in spell data: {e}")
             except Exception as e:
-                logging.error(f"Error processing spell {name if 'name_en' in locals() else 'unknown'}: {e}")
+                logging.error(f"Error processing spell {img_id}: {e}")
     except FileNotFoundError:
         logging.error(f"JSON file not found: {json_filename}")
     except json.JSONDecodeError:
@@ -88,7 +88,7 @@ def create_directory_structure(familie, weapon):
         logging.error(f"Error creating directory structure: {e}")
         raise
 
-def save_spell_config(spell, cwd, name):
+def save_spell_config(spell, cwd, img_id):
     """
     Save the spell configuration to a .json file.
 
@@ -98,13 +98,13 @@ def save_spell_config(spell, cwd, name):
         name (str): name of the spell (used for the filename).
     """
     try:
-        with open(os.path.join(cwd, f"{name}.json"), 'w') as configfile:
+        with open(os.path.join(cwd, f"{img_id}.json"), 'w') as configfile:
             json.dump(spell, configfile, indent=4)
-        logging.info(f"Saved configuration for spell: {name}")
+        logging.info(f"Saved configuration for spell: {img_id}")
     except IOError as e:
-        logging.error(f"Error saving configuration for spell {name}: {e}")
+        logging.error(f"Error saving configuration for spell {img_id}: {e}")
 
-def download_and_process_image(img_id, cwd, name):
+def download_and_process_image(img_id, cwd):
     """
     Download, convert, and save the spell image.
 
@@ -114,8 +114,8 @@ def download_and_process_image(img_id, cwd, name):
         name (str): name of the spell (used for the filename).
     """
     url = f"https://wavendb.com/img/spells/{img_id}.png.webp"
-    webp_path = os.path.join(cwd, f'{name}.png.webp')
-    png_path = os.path.join(cwd, f'{name}.png')
+    webp_path = os.path.join(cwd, f'{img_id}.png.webp')
+    png_path = os.path.join(cwd, f'{img_id}.png')
 
     try:
         # Download the image
@@ -134,15 +134,15 @@ def download_and_process_image(img_id, cwd, name):
         # Delete the WebP image file
         os.remove(webp_path)
         
-        logging.info(f"Successfully processed image for spell: {name}")
+        logging.info(f"Successfully processed image for spell: {img_id}")
     except RequestException as e:
-        logging.error(f"Error downloading image for spell {name}: {e}")
+        logging.error(f"Error downloading image for spell {img_id}: {e}")
     except UnidentifiedImageError as e:
-        logging.error(f"Error processing image for spell {name}: {e}")
+        logging.error(f"Error processing image for spell {img_id}: {e}")
     except OSError as e:
-        logging.error(f"Error saving or deleting image for spell {name}: {e}")
+        logging.error(f"Error saving or deleting image for spell {img_id}: {e}")
     except Exception as e:
-        logging.error(f"Unexpected error processing image for spell {name}: {e}")
+        logging.error(f"Unexpected error processing image for spell {img_id}: {e}")
 
 def fetch_data_page(url):
     try:
@@ -207,7 +207,41 @@ def rename_folder(json_file):
                             logging.info(f"Renaming sub folder {sub_folder} to {new_sub_folder_name}")
                             os.rename(os.path.join(RESULT_FOLDER_PATH, new_folder_name, sub_folder), os.path.join(RESULT_FOLDER_PATH, new_folder_name, new_sub_folder_name))
                             logging.info(f"Renamed sub folder {sub_folder} to {new_sub_folder_name}")
-                        
+
+def rename_spells(language):
+
+    def rename_and_modify_img_path(spell):
+        try:
+            with open(spell, encoding="utf8") as file:
+                data = json.load(file)
+
+            name = data[f'name_{language}']
+            new_name = re.sub(r'[\\/:*?"<>|]', '', name).replace("  ", " ")
+            img = data['img']
+
+            data['img'] = f"{new_name}"
+
+            os.rename(os.path.join(os.path.dirname(spell),f"{img}.png"), os.path.join(os.path.dirname(spell), f"{new_name}.png"))
+
+            with open(spell, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
+            
+            os.rename(spell, os.path.join(os.path.dirname(spell), f"{new_name}.json"))
+            
+            logging.info(f"Renamed spell: {spell} to {new_name}")
+        except FileNotFoundError as e:
+            logging.error(f"File not found error: {e}")
+        except json.JSONDecodeError as e:
+            logging.error(f"JSON decode error: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+
+    for root, dirs, files in os.walk(RESULT_FOLDER_PATH):
+        for spell in files:
+            spell_path = os.path.join(root, spell)
+            if os.path.isfile(spell_path) and spell_path.endswith('.json'):
+                rename_and_modify_img_path(spell_path)
+
 def main(url='https://wavendb.com/spells', file_name="Waven_DB_Spells.json"):
     html_content = fetch_data_page(url)
     if html_content:
@@ -227,6 +261,8 @@ def main(url='https://wavendb.com/spells', file_name="Waven_DB_Spells.json"):
             
         if args.rename_folder:
             rename_folder(output_file)
+        if args.rename_spells:
+            rename_spells(args.language)
     else:
         logging.error("No HTML content fetched from the URL.")
         
@@ -243,7 +279,7 @@ if __name__ == "__main__":
         
     THIS_FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
     RESULT_FOLDER_PATH = os.path.join(THIS_FOLDER_PATH, "Spells")
-    
+
     if not os.path.exists(RESULT_FOLDER_PATH):
         os.makedirs(RESULT_FOLDER_PATH)
     

@@ -16,6 +16,7 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
 - `requests` library
 - `Pillow` library
 - `beautifulsoup4` library
+- `re` library
 
 ## Installation
 
@@ -40,13 +41,18 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
     python waven_db_spell_extractor.py
     ```
 ## Arguments
-`-mv` Rename folders into gods and weapons names (exemple : Folder `1` will be rename as `Iop`).
 `-l` Set the language preference, default is `en`. Available language : en, fr, es, de, pt.
+`-mv` Rename folders into gods and weapons names (exemple : Folder `1` will be rename as `Iop`).
+`-mvs` Rename spells json and png files into their name.
 
 ##Exemple
-1. **Download data in spanish and rename folder"
+1. **Download data and rename folder in spanish**
     ```sh
     python waven_db_spell_extractor.py -mv -l es
+    ```
+2. **Download data, rename folder and spell in the default language (en)**
+    ```sh
+    python waven_db_spell_extractor.py -mv -mvs
     ```
 
 ## Script Details
@@ -61,6 +67,7 @@ The Waven DB Spell Extractor is a Python script designed to automate the extract
 - **`fetch_data_page`**: Fetches the HTML content from the given URL.
 - **`extract_data_page`**: Extracts the `data-page` attribute from the HTML content and parses it into a dictionary.
 - **`rename_folder`**: Rename folders into gods and weapons names.
+- **`rename_spells`**: Rename spells files into their names.
 
 ### Error Handling
 
